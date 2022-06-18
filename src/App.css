@@ -52,6 +52,19 @@ nav span a {
   overflow: scroll;
 }
 
+.column h2 {
+  color: white;
+  font-size: 1.5rem;
+  margin-top: 50px;
+  padding: 0;
+}
+
+.column > button {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
 .task {
   display: flex;
   flex-direction: column;

@@ -33,38 +33,92 @@ function Board(props) {
         taskPriority: 'En Cours'
     }];
 
-    const intitialState = () => {
-        if (localStorage.getItem('tasksState')) {
-            return JSON.parse(localStorage.getItem('tasksState'))
+    const intitialState = (item) => {
+        if (localStorage.getItem(item)) {
+            return JSON.parse(localStorage.getItem(item))
         }
         else {
-            return tasks;
+            if(item === 'columnsState'){
+                return columns
+            }
+            else if(item === 'tasksState'){
+                return tasks
+            }
         }
     }
 
 
-    const [columnsState, setColumnsState] = useState(columns);
-    const [tasksState, setTasksState] = useState(intitialState);
-
-    const addColumn = (e, ref, columns) => {
-        e.preventDefault();
-        const newColumn = {
-            id: uuidv4(),
-            taskPriority: ref.current.value
-        }
-        }
-    
+    const [columnsState, setColumnsState] = useState(intitialState('columnsState'));
+    const [tasksState, setTasksState] = useState(intitialState('tasksState'));
 
     useEffect(() => {
         localStorage.setItem('tasksState', JSON.stringify(tasksState));
     }, [tasksState]);
 
+    useEffect(() => {
+        localStorage.setItem('columnsState', JSON.stringify(columnsState));
+    }, [columnsState]);
+
+    const reinitApp = (e) => {
+        e.preventDefault();
+        setColumnsState(columns);
+        setTasksState(tasks);
+    }
 
 
+    const createColumn = (e, ref) => {
+        e.preventDefault();
+        if (ref.current.value === '') {
+            toast.error('Une colonne ne peut être créée avec un nom vide', {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: false,
+                progress: undefined,
+            }); return
+        }
+        const newColumn = {
+            id: uuidv4(),
+            taskPriority: ref.current.value
+        }
+        setColumnsState([...columnsState, newColumn]);
+        const columnName = ref.current.value
+        const text = 'La colonne "' + columnName + '" a été ajoutée avec succès';
+        toast.success(text, {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: false,
+            progress: undefined,
+        });
+        ref.current.value = '';
+        }
+    const deleteColumn = (e, id) => {
+        e.preventDefault();
+        const newColumns = columnsState.filter(column => column.id !== id);
+        console.log(newColumns);
+        console.log(id)
+        setColumnsState(newColumns);
+    }
+    
 
     const deletetask = (e, id) => {
         e.preventDefault();
         setTasksState(tasksState.filter(task => task.id !== id))
+        toast.info('La tâche a été supprimée', {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: false,
+            progress: undefined,
+        });
+
     }
 
     const createTask = (e, ref, taskPriority) => {
@@ -135,13 +189,15 @@ function Board(props) {
 
 
     return (
+        <>
+        <ToastContainer />
         <div className='board'>
-            <ToastContainer />
-            <NavBar />
+            <NavBar reinit={reinitApp}onCreateColumn={createColumn} />
             {columnsState.map(column => {
-                return <Column onBlurTask={onBlurTask} onDeleteTask={deletetask} onCreateTask={createTask} onUpdateTask={updateTask} columns={columnsState} column={column.taskPriority} tasks={tasksByPriority(column.taskPriority)} key={column.id} taskPrioriy={column.taskPrioriy} />
+                return <Column columnId={column.id}onDeleteColumn={deleteColumn} onBlurTask={onBlurTask} onDeleteTask={deletetask} onCreateTask={createTask} onUpdateTask={updateTask} columns={columnsState} column={column.taskPriority} tasks={tasksByPriority(column.taskPriority)} key={column.id} taskPrioriy={column.taskPrioriy} />
             })}
         </div>
+        </>
     )
 }
 
